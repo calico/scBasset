@@ -53,8 +53,7 @@ See the tutorial here [Post-processing](https://github.com/calico/scBasset/blob/
 
 
 ## Basenji
-scBasset provides a fixed architecture that we experimented to perform best on sc-ATAC datasets. The key components of scBasset architecture come from [Basenji](https://github.com/calico/basenji). Although scBasset can work as a stand-alone package, we strongly suggest installing [Basenji](https://github.com/calico/basenji) if you want to experiment with alternative archictures. We are working on integrating scBasset into Basenji as well.
-
+scBasset provides a fixed architecture that we experimented to perform best on sc-ATAC datasets. The key components of scBasset architecture come from [Basenji](https://github.com/calico/basenji). Although scBasset can work as a stand-alone package, we strongly suggest installing [Basenji](https://github.com/calico/basenji) if you want to experiment with alternative archictures. For running training scBasset within using Basenji framework, see [link](link).
 
 ## Tutorial: Training scBasset on 10x multiome PBMC dataset (scATAC)
 [Preprocess](https://github.com/calico/scBasset/blob/main/examples/preprocess.ipynb)  
