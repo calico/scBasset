@@ -1,4 +1,4 @@
-tensorflow==2.3.0
+tensorflow>=2.4.0
 numpy==1.18.5
 seaborn==0.10.1
 ConfigArgParse==1.2.3
