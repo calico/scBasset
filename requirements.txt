@@ -8,3 +8,6 @@ seaborn
 anndata
 Bio
 tensorflow
+jupyterlab
+scanpy
+pandas
