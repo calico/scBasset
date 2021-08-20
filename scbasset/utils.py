@@ -3,12 +3,7 @@ import numpy as np
 import anndata
 from scipy import sparse
 import h5py
-
-# call basenji functions from basenji or scbasset
-# from basenji.dna_io import dna_1hot
-# from basenji.bed import make_bed_seqs
-# from basenji.layers import GELU
-# from basenji.blocks import conv_block, conv_tower, dense_block, final
+from Bio import SeqIO
 from scbasset.basenji_utils import *
 
 ###############################
@@ -105,12 +100,12 @@ def make_model(bottleneck_size, n_cells, seq_len=1344, show_summary=True):
 ################################
 def get_cell_embedding(model):
     """get cell embeddings from trained model"""
-    return model.layers[-2].get_weights()[0].transpose()
+    return model.layers[-3].get_weights()[0].transpose()
 
 
 def get_intercept(model):
     """get intercept from trained model"""
-    return model.layers[-2].get_weights()[1]
+    return model.layers[-3].get_weights()[1]
 
 
 def imputation_Y(X, model):
@@ -135,10 +130,10 @@ def imputation_Y_normalize(X, model, scale_method=None):
         array:          a peak*cell imputed accessibility matrix. Sequencing depth corrected for. scale_method=None, don't do any scaling of output. The raw normalized output would have both positive and negative values. scale_method="all_positive" scales the output by subtracting minimum value. scale_method="sigmoid" scales the output by sigmoid transform.
     """
     new_model = tf.keras.Model(
-        inputs=model.layers[0].input, outputs=model.layers[-3].output
+        inputs=model.layers[0].input, outputs=model.layers[-4].output
     )
     Y_pred = new_model.predict(X)
-    w = model.layers[-2].get_weights()[0]
+    w = model.layers[-3].get_weights()[0]
     accessibility_norm = np.dot(Y_pred.squeeze(), w)
 
     if scale_method == "all_positive":
@@ -147,3 +142,35 @@ def imputation_Y_normalize(X, model, scale_method=None):
         accessibility_norm = np.divide(1, 1 + np.exp(-accessibility_norm))
 
     return accessibility_norm
+
+def pred_on_fasta(fa, model):
+    """Run a trained model on a fasta file.
+    Args:
+        fa:             fasta file to run on. Need to have a fixed size of 1344. Default sequence size of trained model.
+        model:          a trained scBasset model.
+    Returns:
+        array:          a peak*cell imputed accessibility matrix. Sequencing depth corrected for.
+    """
+    records = list(SeqIO.parse(fa, 'fasta'))
+    seqs = [str(i.seq) for i in records]
+    seqs_1hot = np.array([dna_1hot(i) for i in seqs])
+    pred = imputation_Y_normalize(seqs_1hot, model)
+    return pred
+
+def motif_score(tf, model, motif_fasta_folder):
+    """score motifs for any given TF. 
+    Args:
+        tf:             TF of interest. By default we only score TFs in the scBasset/data/Homo_sapiens_motif_fasta/shuffled_peaks_motifs/ folder. To score on additional motifs. Follow scBasset/examples/make_fasta.R to create dinucleotide shuffled sequences with and without motifs of interest. 
+        model:          a trained scBasset model.
+        motif_fasta_folder: folder for dinucleotide shuffled sequences with and without any motif. We provided motifs from CIS-BP/Homo_sapiens.meme downloaded from the MEME Suite (https://meme-suite.org/meme/) at 'scBasset/data/Homo_sapiens_motif_fasta'.
+    Returns:
+        array:          a vector for motif activity per cell. (cell order is the same order as the model.)
+    """
+    fasta_motif = '%s/shuffled_peaks_motifs/%s.fasta'%(motif_fasta_folder, tf)
+    fasta_bg = '%s/shuffled_peaks.fasta'%motif_fasta_folder
+    
+    pred_motif = pred_on_fasta(fasta_motif, model)
+    pred_bg = pred_on_fasta(fasta_bg, model)
+    tf_score = pred_motif.mean(axis=0) - pred_bg.mean(axis=0)
+    tf_score = (tf_score - tf_score.mean()) / tf_score.std()
+    return tf_score

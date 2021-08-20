@@ -1,9 +1,10 @@
-pysam
 scipy
 matplotlib
-seaborn
+pysam
 numpy
-h5py
-tensorflow
 ConfigArgParse
+h5py
+seaborn
 anndata
+Bio
+tensorflow
