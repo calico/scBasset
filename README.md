@@ -11,7 +11,7 @@ scBasset is a sequence-based convolutional neural network method to model single
 ## installation
 To install scBasset, we suggest first create a conda environment by:
 ```
-    conda env create -n scbasset python=3.7
+    conda create -n scbasset python=3.7
     conda activate scbasset
 ```
 and then run the following commands:

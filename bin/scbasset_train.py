@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import anndata
 import h5py
 import tensorflow as tf
