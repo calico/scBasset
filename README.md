@@ -1,4 +1,8 @@
-![architecture](https://github.com/calico/scBasset/blob/main/docs/architecture.png | width=200)
+<img src="https://github.com/calico/scBasset/blob/main/docs/architecture.png" width=50% height=50%>
+
+<!---
+![architecture](https://github.com/calico/scBasset/blob/main/docs/architecture.png)
+-->
 
 # scBasset
 Sequence-based Modeling of single-cell ATAC-seq using Convolutional Neural Networks.
