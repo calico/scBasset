@@ -1,14 +1,19 @@
+"""
+key functions from Dave Kelley's Basenji (https://github.com/calico/basenji)
+used to build scBasset architecture.
+"""
+
+import random
+import sys
 import tensorflow as tf
 import numpy as np
 import pysam
-import random
-import sys
 
 ##############
 # preprocess #
 ##############
 def dna_1hot(seq, seq_len=None, n_uniform=False):
-    """ dna_1hot
+    """dna_1hot
     Args:
       seq:       nucleotide sequence.
       seq_len:   length to extend/trim sequences to.
@@ -202,11 +207,11 @@ class StochasticShift(tf.keras.layers.Layer):
 def shift_sequence(seq, shift, pad_value=0.25):
     """Shift a sequence left or right by shift_amount.
 
-  Args:
-  seq: [batch_size, seq_length, seq_depth] sequence
-  shift: signed shift value (tf.int32 or int)
-  pad_value: value to fill the padding (primitive or scalar tf.Tensor)
-  """
+    Args:
+    seq: [batch_size, seq_length, seq_depth] sequence
+    shift: signed shift value (tf.int32 or int)
+    pad_value: value to fill the padding (primitive or scalar tf.Tensor)
+    """
     if seq.shape.ndims != 3:
         raise ValueError("input sequence should be rank 3")
     input_shape = seq.shape
@@ -269,7 +274,7 @@ def conv_block(
         bn_gamma:      BatchNorm gamma (defaults according to residual)
       Returns:
         [batch_size, seq_length, features] output sequence
-      """
+    """
 
     # flow through variable current
     current = inputs
@@ -344,7 +349,7 @@ def conv_tower(
         repeat:        Tower repetitions
     Returns:
         [batch_size, seq_length, features] output sequence
-      """
+    """
 
     def _round(x):
         return int(np.round(x / divisible_by) * divisible_by)
@@ -385,7 +390,6 @@ def dense_block(
     bn_gamma=None,
     bn_type="standard",
     kernel_initializer="he_normal",
-    **kwargs
 ):
     """Construct a single convolution block.
     Args:
@@ -415,7 +419,12 @@ def dense_block(
     # flatten
     if flatten:
         _, seq_len, seq_depth = current.shape
-        current = tf.keras.layers.Reshape((1, seq_len * seq_depth,))(current)
+        current = tf.keras.layers.Reshape(
+            (
+                1,
+                seq_len * seq_depth,
+            )
+        )(current)
 
     # dense
     current = tf.keras.layers.Dense(
@@ -454,7 +463,6 @@ def final(
     kernel_initializer="he_normal",
     l2_scale=0,
     l1_scale=0,
-    **kwargs
 ):
     """Final simple transformation before comparison to targets.
     Args:
@@ -472,7 +480,12 @@ def final(
     # flatten
     if flatten:
         _, seq_len, seq_depth = current.shape
-        current = tf.keras.layers.Reshape((1, seq_len * seq_depth,))(current)
+        current = tf.keras.layers.Reshape(
+            (
+                1,
+                seq_len * seq_depth,
+            )
+        )(current)
 
     # dense
     current = tf.keras.layers.Dense(
