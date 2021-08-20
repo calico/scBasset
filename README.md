@@ -23,6 +23,13 @@ Verify that scBasset is correctly installed by:
 ## Usage
 The best way to get familiar with scBasset is to go over the tutorials. Starting from 10x PBMC mulitome output, we will walk you through the data preprocessing, model training and post-processing steps.
 
+## Tutorial: Training scBasset on 10x multiome PBMC dataset (scATAC)
+[Preprocess](https://github.com/calico/scBasset/blob/main/examples/preprocess.ipynb)  
+[Training](https://github.com/calico/scBasset/blob/main/examples/train.sh)  
+[Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/evaluate.ipynb)  
+[Motif scoring](https://github.com/calico/scBasset/blob/main/examples/score_motif.ipynb)  
+
+
 ### 1. data pre-processing.
 
 See the tutorial here [Preprocess](https://github.com/calico/scBasset/blob/main/examples/preprocess.ipynb). In order to run scBasset model, we need to first pre-process the raw 10x scATAC/multiome output. Two files from 10x scATAC/multiome outputs are required for pre-processing: the **_filtered_feature_bc_matrix.h5** that stores the count matrix, and the **_peaks.bed** file that stores genomic regions of the peaks.
@@ -55,10 +62,3 @@ See the tutorial [Motif scoring](https://github.com/calico/scBasset/blob/main/ex
 
 ## Basenji
 scBasset provides a fixed architecture that we experimented to perform best on sc-ATAC datasets. The key components of scBasset architecture come from [Basenji](https://github.com/calico/basenji). Although scBasset can work as a stand-alone package, we strongly suggest installing [Basenji](https://github.com/calico/basenji) if you want to experiment with alternative archictures. See [link](link) as an example of how to create a Json file and instruct Basenji to train a scBasset model.
-
-## Tutorial: Training scBasset on 10x multiome PBMC dataset (scATAC)
-[Preprocess](https://github.com/calico/scBasset/blob/main/examples/preprocess.ipynb)  
-[Training](https://github.com/calico/scBasset/blob/main/examples/train.sh)  
-[Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/evaluate.ipynb)  
-[Motif scoring](https://github.com/calico/scBasset/blob/main/examples/score_motif.ipynb)  
-
