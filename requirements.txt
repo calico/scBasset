@@ -1,11 +1,12 @@
 pysam
+numpy==1.18.5
+numba==0.50.0
+scanpy==1.7.0
 scipy
 seaborn
-anndata
-scanpy
 matplotlib
 ConfigArgParse
 h5py
-tensorflow
+tensorflow==2.3.0
 Bio
 jupyterlab
