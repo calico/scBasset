@@ -19,7 +19,7 @@ and then run the following commands:
     git clone https://github.com/calico/scBasset.git
     pip install -e scBasset
 ```
-Verify that scBasset is correctly installed by:
+Verify that scBasset is correctly installed by running in python:
 ```
     import scbasset
 ```
