@@ -22,6 +22,10 @@ def make_parser():
                        help='path to h5 file.')
     parser.add_argument('--bottleneck', type=int, default=32,
                        help='size of bottleneck layer. Default to 32')
+    parser.add_argument('--batch_size', type=int, default=128,
+                       help='batch size. Default to 128')
+    parser.add_argument('--lr', type=float, default=0.01,
+                       help='learning rate. Default to 0.01')
     parser.add_argument('--epochs', type=int, default=1000,
                        help='Number of epochs to train. Default to 1000.')
     parser.add_argument('--out_path', type=str, default='output',
@@ -34,6 +38,8 @@ def main():
     
     out_dir = args.out_path
     bottleneck_size = args.bottleneck
+    batch_size = args.batch_size
+    lr = args.lr
     epochs = args.epochs
     h5_file = args.h5
 
@@ -56,7 +62,7 @@ def main():
 
     # combine model
     loss_fn = tf.keras.losses.BinaryCrossentropy()
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.01,beta_1=0.95,beta_2=0.9995)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=lr,beta_1=0.95,beta_2=0.9995)
     model.compile(loss=loss_fn, optimizer=optimizer,
                   metrics=[tf.keras.metrics.AUC(curve='ROC', multi_label=True),
                            tf.keras.metrics.AUC(curve='PR', multi_label=True)])
@@ -73,7 +79,7 @@ def main():
     history = model.fit(
         X_train,
         Y_train,
-        batch_size=128,
+        batch_size=batch_size,
         epochs=epochs,
         callbacks=callbacks,
         validation_data=(X_val, Y_val))
