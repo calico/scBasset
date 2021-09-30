@@ -49,7 +49,7 @@ usage: scbasset_train.py [-h] [--h5 H5] [--bottleneck BOTTLENECK]
                          [--batch_size BATCH_SIZE] [--lr LR] [--epochs EPOCHS]
                          [--out_path OUT_PATH]
 
-train basset on scATAC data
+train scBasset on scATAC data
 
 optional arguments:
   -h, --help            show this help message and exit

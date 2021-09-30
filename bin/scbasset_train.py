@@ -17,7 +17,7 @@ from scbasset.basenji_utils import *
 
 def make_parser():
     parser = configargparse.ArgParser(
-        description="train basset on scATAC data")
+        description="train scBasset on scATAC data")
     parser.add_argument('--h5', type=str,
                        help='path to h5 file.')
     parser.add_argument('--bottleneck', type=int, default=32,
