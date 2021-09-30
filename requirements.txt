@@ -10,3 +10,4 @@ h5py
 tensorflow==2.3.0
 Bio
 jupyterlab
+leidenalg
