@@ -236,16 +236,16 @@ def pred_on_fasta(fa, model):
 def motif_score(tf, model, motif_fasta_folder):
     """score motifs for any given TF.
     Args:
-        tf:             TF of interest. By default we only score TFs in the
-                        scBasset/data/Homo_sapiens_motif_fasta/shuffled_peaks_motifs/ folder.
-                        To score on additional motifs. Follow scBasset/examples/make_fasta.R
+        tf:             TF of interest. By default we only provide TFs to score in
+                        https://storage.googleapis.com/scbasset_tutorial_data/Homo_sapiens_motif_fasta.tar.gz.
+                        To score on additional motifs. Follow make_fasta.R in the tarball.
                         to create dinucleotide shuffled sequences with and without motifs of
                         interest.
         model:          a trained scBasset model.
         motif_fasta_folder: folder for dinucleotide shuffled sequences with and without any motif.
                         We provided motifs from CIS-BP/Homo_sapiens.meme downloaded from the
-                        MEME Suite (https://meme-suite.org/meme/) at
-                        'scBasset/data/Homo_sapiens_motif_fasta'.
+                        MEME Suite (https://meme-suite.org/meme/) at in the 
+                        https://storage.googleapis.com/scbasset_tutorial_data/Homo_sapiens_motif_fasta.tar.gz.
     Returns:
         array:          a vector for motif activity per cell. (cell order is the
                         same order as the model.)
