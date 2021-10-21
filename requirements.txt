@@ -8,6 +8,7 @@ matplotlib
 ConfigArgParse
 h5py
 tensorflow==2.3.0
+tensorflow-gpu==2.3.0
 Bio
 jupyterlab
 leidenalg
