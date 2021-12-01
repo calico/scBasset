@@ -84,7 +84,6 @@ def main():
         callbacks=callbacks,
         validation_data=(X_val, Y_val))
     pickle.dump(history.history, open('%s/history.pickle'%out_dir, 'wb'))
-    
 
 if __name__ == "__main__":
     main()
