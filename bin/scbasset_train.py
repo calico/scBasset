@@ -6,14 +6,20 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import psutil
 import math
 import pickle
 import seaborn as sns
 import scipy
 import configargparse
 import sys
+import psutil
 from scbasset.utils import *
 from scbasset.basenji_utils import *
+
+def print_memory():
+    process = psutil.Process(os.getpid())
+    print('cpu memory used: %.1fGB.'%(process.memory_info().rss/1e9))
 
 def make_parser():
     parser = configargparse.ArgParser(
@@ -30,6 +36,9 @@ def make_parser():
                        help='Number of epochs to train. Default to 1000.')
     parser.add_argument('--out_path', type=str, default='output',
                        help='Output path. Default to ./output/')
+    parser.add_argument('--print_mem', type=bool, default=True,
+                       help='whether to output cpu memory usage.')
+
     return parser
 
 def main():
@@ -72,9 +81,11 @@ def main():
     filepath = '%s/best_model.h5'%out_dir
     callbacks = [
         tf.keras.callbacks.TensorBoard(out_dir),
-        tf.keras.callbacks.ModelCheckpoint(filepath, save_best_only=True, save_weights_only=True, monitor='auc', mode='max'),
+        tf.keras.callbacks.ModelCheckpoint(filepath, save_best_only=True, 
+                                           save_weights_only=True, monitor='auc', mode='max'),
         tf.keras.callbacks.EarlyStopping(monitor='auc', min_delta=1e-6, mode='max', patience=50, verbose=1)]
-    
+        
+    print_memory()
     # train the model
     history = model.fit(
         X_train,
@@ -84,6 +95,7 @@ def main():
         callbacks=callbacks,
         validation_data=(X_val, Y_val))
     pickle.dump(history.history, open('%s/history.pickle'%out_dir, 'wb'))
-
+    print_memory()
+    
 if __name__ == "__main__":
     main()
