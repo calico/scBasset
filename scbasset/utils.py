@@ -11,137 +11,6 @@ from Bio import SeqIO
 from scbasset.basenji_utils import *
 import time
 
-'''
-def make_h5( # deprecated
-    input_ad,
-    input_bed,
-    input_fasta,
-    out_file,
-    seq_len=1344,
-    train_ratio=0.9,
-):
-    """Preprocess to generate h5 for scBasset training.
-    Args:
-        input_ad:       anndata. the peak by cell matrix.
-        input_bed:      bed file. genomic range of peaks.
-        input_fasta:    fasta file. genome fasta. (hg19, hg38, mm10 etc.)
-        out_file:       output file name.
-        seq_len:        peak size to train on. default to 1344.
-        train_ratio:    fraction of data used for training. default to 0.9.
-    Returns:
-        None.           Save a h5 file to 'out_file'. X: 1-hot encoded feature matrix.
-                        Y: peak by cell matrix. train_ids: data indices used for train.
-                        val_ids: data indices used for val. test_ids: data indices unused
-                        during training, can be used for test.
-    """
-    # generate 1-hot-encoding from bed
-    (seqs_dna, seqs_coords,) = make_bed_seqs(
-        input_bed,
-        fasta_file=input_fasta,
-        seq_len=seq_len,
-    )
-    dna_array = [dna_1hot(x) for x in seqs_dna]
-    dna_array = np.array(dna_array)
-    ids = np.arange(dna_array.shape[0])
-    np.random.seed(10)
-    test_val_ids = np.random.choice(
-        ids,
-        int(len(ids) * (1 - train_ratio)),
-        replace=False,
-    )
-    train_ids = np.setdiff1d(ids, test_val_ids)
-    val_ids = np.random.choice(
-        test_val_ids,
-        int(len(test_val_ids) / 2),
-        replace=False,
-    )
-    test_ids = np.setdiff1d(test_val_ids, val_ids)
-
-    # generate binary peak*cell matrix
-    ad = anndata.read_h5ad(input_ad)
-    if sparse.issparse(ad.X):
-        m = (np.array(ad.X.todense()).transpose() != 0) * 1
-    else:
-        m = (np.array(ad.X).transpose() != 0) * 1
-
-    # save train_test_val splits
-    f = h5py.File(out_file, "w")
-    f.create_dataset(
-        "X",
-        data=dna_array,
-        dtype="bool",
-    )
-    f.create_dataset("Y", data=m, dtype="int8")
-    f.create_dataset(
-        "train_ids",
-        data=train_ids,
-        dtype="int",
-    )
-    f.create_dataset(
-        "val_ids",
-        data=val_ids,
-        dtype="int",
-    )
-    f.create_dataset(
-        "test_ids",
-        data=test_ids,
-        dtype="int",
-    )
-    f.close()
-
-# using ragged array
-# deprecated
-def make_h5_sparse_old(tmp_ad, h5_name, input_fasta, seq_len=1344, batch_size=1000): 
-    ## batch_size: how many peaks to process at a time
-    ## tmp_ad.var must have columns chr, start, end
-    
-    t0 = time.time()
-    
-    m = tmp_ad.X
-    m = m.tocoo().transpose().tocsr()
-    n_peaks = tmp_ad.shape[1]
-    bed_df = tmp_ad.var.loc[:,['chr','start','end']] # bed file
-    bed_df.index = np.arange(bed_df.shape[0])
-    n_batch = int(np.floor(n_peaks/batch_size))
-    batches = np.array_split(np.arange(n_peaks), n_batch) # split all peaks to process in batches
-    
-    ### create h5 file
-    # h5 has two datasets
-    # X is a matrix of n_peaks * 1344
-    # Y is a ragged array of n_peaks * variable-length
-    f = h5py.File(h5_name, "w")
-    
-    ds_X = f.create_dataset(
-        "X",
-        (n_peaks, seq_len),
-        dtype="int32",
-    )
-    dt = h5py.vlen_dtype(np.dtype('int32'))
-    ds_Y = f.create_dataset('Y', (n_peaks,), dtype=dt)
-
-    # save to h5 file
-    for idx in batches:
-        # write X to h5 file
-        seqs_dna,_ = make_bed_seqs_from_df(
-            bed_df.iloc[idx,:],
-            fasta_file=input_fasta,
-            seq_len=seq_len,
-        )
-        dna_array_dense = [dna_1hot_2vec(x) for x in seqs_dna]
-        dna_array_dense = np.array(dna_array_dense)
-        ds_X[idx] = dna_array_dense
-    
-        # write Y to h5 file
-        for i in idx:
-            ds_Y[i] = m[i,:].indices # for each peak save cell indices
-        
-        t1 = time.time()
-        total = t1-t0
-        print('process %d peaks takes %.1f s' %(i, total))
-    
-    f.close()
-'''
-
 ###############################
 # function for pre-processing #
 ###############################
@@ -606,21 +475,20 @@ def motif_score(tf, model, motif_fasta_folder):
     return tf_score
 
 # compute ism from sequence
-def ism(seq_ref, model, bc_model=False):
+def ism(seq_ref_1hot, model):
     
-    assert (bc_model==False), "don't handle scBasset-BC for now."
-    
-    new_model = tf.keras.Model(inputs=model.layers[0].input, outputs=model.layers[-4].output)
+    new_model = tf.keras.Model(
+        inputs=model.layers[0].input,
+        outputs=model.layers[-4].output,
+    )
     w = model.layers[-3].get_weights()[0]
-    
-    seq_ref_1hot = dna_1hot(seq_ref)
-    
+
     # output matrix
     m = np.zeros((model.output.shape[1], seq_ref_1hot.shape[0], seq_ref_1hot.shape[1]))
     
     # predication of reference seq
-    latent_ref = new_model.predict(np.array([seq_ref_1hot]))
-    pred_ref = np.dot(latent_ref.squeeze(), w)
+    latent = new_model.predict(np.array([seq_ref_1hot]))
+    pred_ref = np.dot(latent.squeeze(), w)
     
     # compute ism
     for i in range(seq_ref_1hot.shape[0]):
