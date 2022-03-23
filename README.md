@@ -35,8 +35,8 @@ The best way to get familiar with scBasset is to go over the tutorials. Starting
 [Training](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/train.sh)   
 [Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb)   
 [Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/score_motif.ipynb)  
-[ISM_visualization](https://github.com/calico/scBasset/blob/main/examples/ISM/ism.ipynb)
-[ISM_PWM](https://github.com/calico/scBasset/blob/main/examples/ISM/motif_analysis.ipynb)
+[ISM_visualization](https://github.com/calico/scBasset/blob/main/examples/ISM/ism.ipynb)   
+[ISM_PWM](https://github.com/calico/scBasset/blob/main/examples/ISM/motif_analysis.ipynb)   
 
 
 ### 1. download tutorial data.
