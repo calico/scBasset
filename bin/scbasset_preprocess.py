@@ -49,9 +49,10 @@ def main():
     ad_test = ad[:,test_ids]
     ad_val = ad[:,val_ids]
 
+    make_h5_sparse(ad, '%s/all_seqs.h5'%output_path, input_fasta)
     make_h5_sparse(ad_train, '%s/train_seqs.h5'%output_path, input_fasta)
     make_h5_sparse(ad_test, '%s/test_seqs.h5'%output_path, input_fasta)
     make_h5_sparse(ad_val, '%s/val_seqs.h5'%output_path, input_fasta)
-    
+
 if __name__ == "__main__":
     main()

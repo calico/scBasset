@@ -35,16 +35,22 @@ The best way to get familiar with scBasset is to go over the tutorials. Starting
 [Training](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/train.sh)   
 [Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb)   
 [Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/score_motif.ipynb)  
-[ISM](https://github.com/calico/scBasset/blob/main/examples/ISM/ism.ipynb)
+[ISM_visualization](https://github.com/calico/scBasset/blob/main/examples/ISM/ism.ipynb)
+[ISM_PWM](https://github.com/calico/scBasset/blob/main/examples/ISM/motif_analysis.ipynb)
 
-### 1. create anndata.
+
+### 1. download tutorial data.
+
+Follow [Download tutorial data](https://github.com/calico/scBasset/blob/main/examples/download.ipynb) to download data used for tutorial.
+
+### 2. create anndata.
 
 See the tutorial here [Create Anndata](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/make_anndata.ipynb). 
 In order to run scBasset model, we need to first create anndata from the raw 10x scATAC/multiome output. Two files from 10x scATAC/multiome outputs are required: the **_filtered_feature_bc_matrix.h5** that stores the count matrix, and the **_peaks.bed** file that stores genomic regions of the peaks. Briefly, We converted the raw filtered_feature_bc_matrix.h5 into a h5ad file, and perform filtering of peaks. Notice that we filter out peaks accessible in <5% cells for optimal performance.  The h5ad file should have cells as obs and peaks as var. There should be at least three columns in var: chr, start, end that indicate the genomic region of each peak.
 
-### 2. generate training data for scBasset.
+### 3. generate training data for scBasset.
 
-scBasset/bin/scbasset_preprocess.py is used as a command line tool to extract sequences underlying the peaks, one-hot encode them and save them to h5 sparse format. Run 'scbasset_preprocess.py --help' to see help page. scBasset takes as input anndata file, genome fasta file for the corresponding genome build, and output folder name.  Genome fasta file can be downloaded from [UCSC](https://hgdownload.soe.ucsc.edu/downloads.html).
+scBasset/bin/scbasset_preprocess.py is used as a command line tool to extract sequences underlying the peaks, one-hot encode them and save them to h5 sparse format. Run 'scbasset_preprocess.py --help' to see help page. scBasset takes as input anndata file, genome fasta file for the corresponding genome build, and output folder name.  Genome fasta file can be downloaded from [UCSC](https://hgdownload.soe.ucsc.edu/downloads.html). This process should take ~30s for example multiome PBMC dataset.
 The following output are saved to the output folder: ad.h5ad, splits.h5, train_seqs.h5, test_seqs.h5, val_seqs.h5.
 ```
 usage: scbasset_preprocess.py [-h] [--ad_file AD_FILE]
@@ -62,8 +68,8 @@ optional arguments:
 ```
 Note: if you are generating peak atlas and count matrix from other sources such as ArchR. Make sure the peak atlas and count matrix have matching peak order! For ArchR, use rowRanges(getMatrixFromProject(proj,"PeakMatrix")) as the peaks so that the peak order matches getMatrixFromProject(proj, "PeakMatrix"). Peaks in getPeakSet(proj) could have a different order!
 
-### 3. training scBasset model.
-scBasset/bin/scbasset_train.py is used as a command line tool for training model. Use 'scbasset_train.py --help' to see help page. scbasset_train.py takes as input the folder path containing preprocessed h5 files.
+### 4. training scBasset model.
+scBasset/bin/scbasset_train.py is used as a command line tool for training model. Use 'scbasset_train.py --help' to see help page. scbasset_train.py takes as input the folder path containing preprocessed h5 files. scBasset by default trains for 1000 epochs with early-stopping. Training takes ~13s per epoch for example multiome PBMC dataset on V100 gpu. 
 ```
 usage: scbasset_train.py [-h] [--input_folder INPUT_FOLDER]
                          [--bottleneck BOTTLENECK] [--batch_size BATCH_SIZE]
@@ -89,12 +95,12 @@ optional arguments:
                         whether to output cpu memory usage.
 ```
 
-### 3. data post-processing.
+### 5. data post-processing.
 See the tutorial [Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb) for how to get cell embedding and denoised accessibility profiles from a trained scBasset model.  
 
 See the tutorial [Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/score_motif.ipynb) for how to score motifs on a per cell basis using motif injection method. For motif injection, we first generated dinucleotides shuffled background sequences, and inserted motif of interest to the center of those sequences. We provided such sequences for motifs in the MEME Suite CIS-BP 1.0 [Homo sapiens motif collection](https://meme-suite.org/meme/db/motifs) at [Homo_sapiens_motif_fasta](https://storage.googleapis.com/scbasset_tutorial_data/Homo_sapiens_motif_fasta.tar.gz). To score on additional motifs, follow make_fasta.R in the tarball to create dinucleotide shuffled sequences with and without motifs of interest. 
 
-See the tutorial [ISM](https://github.com/calico/scBasset/blob/main/examples/ISM/ism.ipynb) for performing in silico saturation mutagenesis on an example peak of interest.
+See the tutorial [ISM_visualization](https://github.com/calico/scBasset/blob/main/examples/ISM/ism.ipynb) for performing in silico saturation mutagenesis on an example peak of interest, and visualizing the ISM scores aggregated by cell type. See tutorial [ISM_PWM](https://github.com/calico/scBasset/blob/main/examples/ISM/motif_analysis.ipynb) for computing Pearson correlation between ISM and motif match.
 
 ## Basenji
 scBasset provides a fixed architecture that we experimented to perform best on scATAC datasets. The key components of scBasset architecture come from [Basenji](https://github.com/calico/basenji). Although scBasset can work as a stand-alone package, we strongly suggest installing [Basenji](https://github.com/calico/basenji) if you want to experiment with alternative archictures. See [link](link) as an example of how to create a Json file and instruct Basenji to train a scBasset model.
