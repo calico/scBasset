@@ -1,0 +1,7 @@
+**/*~
+**/*.pyc
+scBasset.egg-info/
+*/__pycache__/
+**/.DS_Store
+**/.ipynb_checkpoints/
+
