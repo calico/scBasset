@@ -29,12 +29,11 @@ The best way to get familiar with scBasset is to go over the tutorials. Starting
 
 ## Tutorial: Training scBasset on 10x multiome PBMC dataset (scATAC)
 
-[Create Anndata](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/make_anndata.ipynb)
-[create H5](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/train.sh)
-[Training](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/train.sh)  
-[Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb)  
+[Create Anndata](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/make_anndata.ipynb)   
+[create H5](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/train.sh)   
+[Training](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/train.sh)   
+[Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb)   
 [Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/score_motif.ipynb)  
-
 
 ### 1. create anndata.
 
@@ -55,7 +54,7 @@ Preprocess anndata to generate inputs for scBasset.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --ad_file AD_FILE     Input scATAC anndata.
+  --ad_file AD_FILE     Input scATAC anndata. .var must have 'chr', 'start', 'end' columns.
   --input_fasta INPUT_FASTA
                         Genome fasta file.
   --out_path OUT_PATH   Output path. Default to ./processed/
