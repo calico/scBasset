@@ -5,3 +5,4 @@ scBasset.egg-info/
 **/.DS_Store
 **/.ipynb_checkpoints/
 data/downloads/*
+examples/PBMC_multiome/results/*
