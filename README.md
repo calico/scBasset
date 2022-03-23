@@ -28,17 +28,18 @@ Verify that scBasset is correctly installed by running in python:
 The best way to get familiar with scBasset is to go over the tutorials. Starting from 10x PBMC mulitome output, we will walk you through the data preprocessing, model training and post-processing steps.
 
 ## Tutorial: Training scBasset on 10x multiome PBMC dataset (scATAC)
-[Create Anndata](https://github.com/calico/scBasset/blob/main/examples/PBMC_mulltiome/make_anndata.ipynb)
+
+[Create Anndata](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/make_anndata.ipynb)
 [create H5](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/train.sh)
-[Training](https://github.com/calico/scBasset/blob/main/examples/PBMC_mulltiome/train.sh)  
-[Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_mulltiome/evaluate.ipynb)  
-[Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_mulltiome/score_motif.ipynb)  
+[Training](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/train.sh)  
+[Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb)  
+[Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/score_motif.ipynb)  
 
 
 ### 1. create anndata.
 
 
-See the tutorial here [Create Anndata](https://github.com/calico/scBasset/blob/main/examples/PBMC_mulltiome/make_anndata.ipynb). 
+See the tutorial here [Create Anndata](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/make_anndata.ipynb). 
 In order to run scBasset model, we need to first create anndata from the raw 10x scATAC/multiome output. Two files from 10x scATAC/multiome outputs are required: the **_filtered_feature_bc_matrix.h5** that stores the count matrix, and the **_peaks.bed** file that stores genomic regions of the peaks. Briefly, We converted the raw filtered_feature_bc_matrix.h5 into a h5ad file, and perform filtering of peaks. Notice that we filter out peaks accessible in <5% cells for optimal performance.  The h5ad file should have cells as obs and peaks as var. There should be at least three columns in var: chr, start, end that indicate the genomic region of each peak.
 
 ### 2. generate training data for scBasset.
@@ -89,11 +90,11 @@ optional arguments:
 ```
 
 ### 3. data post-processing.
-See the tutorial [Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_mulltiome/evaluate.ipynb) for how to get cell embedding and denoised accessibility profiles from a trained scBasset model.  
+See the tutorial [Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb) for how to get cell embedding and denoised accessibility profiles from a trained scBasset model.  
 
-See the tutorial [Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_mulltiome/score_motif.ipynb) for how to score motifs on a per cell basis using motif injection method. For motif injection, we first generated dinucleotides shuffled background sequences, and inserted motif of interest to the center of those sequences. We provided such sequences for motifs in the MEME Suite CIS-BP 1.0 [Homo sapiens motif collection](https://meme-suite.org/meme/db/motifs) at [Homo_sapiens_motif_fasta](https://storage.googleapis.com/scbasset_tutorial_data/Homo_sapiens_motif_fasta.tar.gz). To score on additional motifs, follow make_fasta.R in the tarball to create dinucleotide shuffled sequences with and without motifs of interest. 
+See the tutorial [Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/score_motif.ipynb) for how to score motifs on a per cell basis using motif injection method. For motif injection, we first generated dinucleotides shuffled background sequences, and inserted motif of interest to the center of those sequences. We provided such sequences for motifs in the MEME Suite CIS-BP 1.0 [Homo sapiens motif collection](https://meme-suite.org/meme/db/motifs) at [Homo_sapiens_motif_fasta](https://storage.googleapis.com/scbasset_tutorial_data/Homo_sapiens_motif_fasta.tar.gz). To score on additional motifs, follow make_fasta.R in the tarball to create dinucleotide shuffled sequences with and without motifs of interest. 
 
-See the tutorial [ISM]() for performing in silico saturation mutagenesis on an example peak of interest.
+See the tutorial [ISM](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb) for performing in silico saturation mutagenesis on an example peak of interest.
 
 ## Basenji
 scBasset provides a fixed architecture that we experimented to perform best on sc-ATAC datasets. The key components of scBasset architecture come from [Basenji](https://github.com/calico/basenji). Although scBasset can work as a stand-alone package, we strongly suggest installing [Basenji](https://github.com/calico/basenji) if you want to experiment with alternative archictures. See [link](link) as an example of how to create a Json file and instruct Basenji to train a scBasset model.
