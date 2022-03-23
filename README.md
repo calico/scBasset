@@ -1,4 +1,4 @@
-<img src="https://github.com/calico/scBasset/blob/main/docs/architecture.png" width=70% height=70%>
+<img src="https://github.com/calico/scBasset/blob/main/docs/architecture.png" width=100% height=100%>
 
 <!---
 ![architecture](https://github.com/calico/scBasset/blob/main/docs/architecture.png)
