@@ -1,3 +1,4 @@
 #/bin/bash
 
-python ../../bin/scbasset_train.py --h5 ../../data/download/pbmc_multiome_train_test_val.h5 --out_path ../../data/multiome_example/trained_model
+python ../../bin/scbasset_preprocess.py --ad_file atac_ad.h5ad --input_fasta /home/yuanh/genomes/hg38/hg38.fa
+python ../../bin/scbasset_train.py --input_folder processed/ --epochs 10

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import anndata
 import h5py
 import tensorflow as tf
@@ -14,18 +13,16 @@ import scipy
 import configargparse
 import sys
 import psutil
+import gc
 from scbasset.utils import *
 from scbasset.basenji_utils import *
 
-def print_memory():
-    process = psutil.Process(os.getpid())
-    print('cpu memory used: %.1fGB.'%(process.memory_info().rss/1e9))
 
 def make_parser():
     parser = configargparse.ArgParser(
         description="train scBasset on scATAC data")
-    parser.add_argument('--h5', type=str,
-                       help='path to h5 file.')
+    parser.add_argument('--input_folder', type=str,
+                       help='folder contains preprocess files. The folder should contain: train_seqs.h5, test_seqs.h5, val_seqs.h5, splits.h5, ad.h5ad')
     parser.add_argument('--bottleneck', type=int, default=32,
                        help='size of bottleneck layer. Default to 32')
     parser.add_argument('--batch_size', type=int, default=128,
@@ -41,61 +38,96 @@ def make_parser():
 
     return parser
 
+def print_memory():
+    process = psutil.Process(os.getpid())
+    print('cpu memory used: %.1fGB.'%(process.memory_info().rss/1e9))
+    
+
 def main():
     parser = make_parser()
     args = parser.parse_args()
     
-    out_dir = args.out_path
+    preprocess_folder = args.input_folder
     bottleneck_size = args.bottleneck
     batch_size = args.batch_size
     lr = args.lr
     epochs = args.epochs
-    h5_file = args.h5
-
-    f = h5py.File(h5_file, 'r')
-    X = f['X'][:].astype('float32')
-    Y = f['Y'][:].astype('float32')
+    out_dir = args.out_path
+    print_mem = args.print_mem
     
-    train_ids = f['train_ids'][:]
-    val_ids = f['val_ids'][:]
-    test_ids = f['test_ids'][:]
+    train_data = '%s/train_seqs.h5'%preprocess_folder
+    val_data = '%s/val_seqs.h5'%preprocess_folder
+    split_file = '%s/splits.h5'%preprocess_folder
+    ad = anndata.read_h5ad('%s/ad.h5ad'%preprocess_folder)
+    n_cells = ad.shape[0]
+    
+    # convert to csr matrix
+    with h5py.File(split_file, 'r') as hf:
+        train_ids = hf['train_ids'][:]
+        val_ids = hf['val_ids'][:]
 
-    X_train = X[train_ids]
-    Y_train = Y[train_ids]
-    X_val = X[val_ids]
-    Y_val = Y[val_ids]
-
-    n_cells = Y.shape[1]
-
+    m = ad.X.tocoo().transpose().tocsr()
+    if print_mem:
+        print_memory()     # memory usage
+    
+    del ad
+    gc.collect()
+    
+    m_train = m[train_ids,:]
+    m_val = m[val_ids,:]
+    del m
+    gc.collect()
+    
+    # generate tf.datasets
+    train_ds = tf.data.Dataset.from_generator(
+        generator(train_data, m_train), 
+        output_signature=(
+             tf.TensorSpec(shape=(1344,4), dtype=tf.int8),
+             tf.TensorSpec(shape=(n_cells), dtype=tf.int8),
+        )
+    ).shuffle(2000, reshuffle_each_iteration=True).batch(128).prefetch(tf.data.AUTOTUNE)
+    
+    val_ds = tf.data.Dataset.from_generator(
+        generator(val_data, m_val), 
+        output_signature=(
+             tf.TensorSpec(shape=(1344,4), dtype=tf.int8),
+             tf.TensorSpec(shape=(n_cells), dtype=tf.int8),
+        )
+    ).batch(128).prefetch(tf.data.AUTOTUNE)
+    
+    # build model
     model = make_model(bottleneck_size, n_cells)
 
-    # combine model
+    # compile model
     loss_fn = tf.keras.losses.BinaryCrossentropy()
     optimizer = tf.keras.optimizers.Adam(learning_rate=lr,beta_1=0.95,beta_2=0.9995)
     model.compile(loss=loss_fn, optimizer=optimizer,
                   metrics=[tf.keras.metrics.AUC(curve='ROC', multi_label=True),
                            tf.keras.metrics.AUC(curve='PR', multi_label=True)])
 
-
     # earlystopping, track train AUC
     filepath = '%s/best_model.h5'%out_dir
+    
+    # tensorboard
+    from datetime import datetime
+    logs = "logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    
     callbacks = [
         tf.keras.callbacks.TensorBoard(out_dir),
         tf.keras.callbacks.ModelCheckpoint(filepath, save_best_only=True, 
                                            save_weights_only=True, monitor='auc', mode='max'),
-        tf.keras.callbacks.EarlyStopping(monitor='auc', min_delta=1e-6, mode='max', patience=50, verbose=1)]
-        
-    print_memory()
+        tf.keras.callbacks.EarlyStopping(monitor='auc', min_delta=1e-6, 
+                                         mode='max', patience=50, verbose=1),
+    ]
+    
     # train the model
     history = model.fit(
-        X_train,
-        Y_train,
-        batch_size=batch_size,
+        train_ds,
         epochs=epochs,
         callbacks=callbacks,
-        validation_data=(X_val, Y_val))
+        validation_data=val_ds)
     pickle.dump(history.history, open('%s/history.pickle'%out_dir, 'wb'))
-    print_memory()
     
+
 if __name__ == "__main__":
     main()
