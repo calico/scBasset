@@ -68,7 +68,7 @@ optional arguments:
 ```
 Note: if you are generating peak atlas and count matrix from other sources such as ArchR. Make sure the peak atlas and count matrix have matching peak order! For ArchR, use rowRanges(getMatrixFromProject(proj,"PeakMatrix")) as the peaks so that the peak order matches getMatrixFromProject(proj, "PeakMatrix"). Peaks in getPeakSet(proj) could have a different order!
 
-### 4. training scBasset model.
+### 4. train scBasset model.
 scBasset/bin/scbasset_train.py is used as a command line tool for training model. Use 'scbasset_train.py --help' to see help page. scbasset_train.py takes as input the folder path containing preprocessed h5 files. scBasset by default trains for 1000 epochs with early-stopping. Training takes ~13s per epoch for example multiome PBMC dataset on V100 gpu. 
 ```
 usage: scbasset_train.py [-h] [--input_folder INPUT_FOLDER]
@@ -95,7 +95,7 @@ optional arguments:
                         whether to output cpu memory usage.
 ```
 
-### 5. data post-processing.
+### 5. use trained model for downstream analysis.
 See the tutorial [Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb) for how to get cell embedding and denoised accessibility profiles from a trained scBasset model.  
 
 See the tutorial [Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/score_motif.ipynb) for how to score motifs on a per cell basis using motif injection method. For motif injection, we first generated dinucleotides shuffled background sequences, and inserted motif of interest to the center of those sequences. We provided such sequences for motifs in the MEME Suite CIS-BP 1.0 [Homo sapiens motif collection](https://meme-suite.org/meme/db/motifs) at [Homo_sapiens_motif_fasta](https://storage.googleapis.com/scbasset_tutorial_data/Homo_sapiens_motif_fasta.tar.gz). To score on additional motifs, follow make_fasta.R in the tarball to create dinucleotide shuffled sequences with and without motifs of interest. 
