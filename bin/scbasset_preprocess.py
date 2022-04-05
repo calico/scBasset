@@ -38,6 +38,8 @@ def main():
     seq_len = 1344
 
     ad.write('%s/ad.h5ad'%output_path)
+    ad.var.loc[:,['chr','start','end']].to_csv('%s/peaks.bed'%output_path, sep='\t', header=False, index=False)
+    
     train_ids, test_ids, val_ids = split_train_test_val(np.arange(ad.shape[1]))
     f = h5py.File('%s/splits.h5'%output_path, "w")
     f.create_dataset("train_ids", data=train_ids)

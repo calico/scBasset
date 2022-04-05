@@ -4,5 +4,6 @@ scBasset.egg-info/
 */__pycache__/*
 **/.DS_Store
 **/.ipynb_checkpoints/
+**/.ipynb_checkpoints/*
 data/downloads/*
 examples/PBMC_multiome/results/*
