@@ -1,0 +1,11 @@
+LICENSE
+README.md
+setup.py
+scbasset/__init__.py
+scbasset/basenji_utils.py
+scbasset/utils.py
+scbasset.egg-info/PKG-INFO
+scbasset.egg-info/SOURCES.txt
+scbasset.egg-info/dependency_links.txt
+scbasset.egg-info/requires.txt
+scbasset.egg-info/top_level.txt

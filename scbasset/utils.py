@@ -2,14 +2,15 @@
 utility functions that support scBasset.
 """
 
-import tensorflow as tf
-import numpy as np
 import anndata
-from scipy import sparse
 import h5py
-from Bio import SeqIO
-from scbasset.basenji_utils import *
 import time
+import psutil
+import numpy as np
+import tensorflow as tf
+from Bio import SeqIO
+from scipy import sparse
+from scbasset.basenji_utils import *
 
 ###############################
 # function for pre-processing #

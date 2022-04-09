@@ -12,8 +12,8 @@ import seaborn as sns
 import scipy
 import configargparse
 import sys
-import psutil
 import gc
+from datetime import datetime
 from scbasset.utils import *
 from scbasset.basenji_utils import *
 
@@ -37,11 +37,6 @@ def make_parser():
                        help='whether to output cpu memory usage.')
 
     return parser
-
-def print_memory():
-    process = psutil.Process(os.getpid())
-    print('cpu memory used: %.1fGB.'%(process.memory_info().rss/1e9))
-    
 
 def main():
     parser = make_parser()
@@ -109,7 +104,6 @@ def main():
     filepath = '%s/best_model.h5'%out_dir
     
     # tensorboard
-    from datetime import datetime
     logs = "logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
     
     callbacks = [

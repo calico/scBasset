@@ -1,0 +1,13 @@
+pysam
+numpy
+numba
+tensorflow
+jupyterlab
+scanpy
+scipy
+seaborn
+matplotlib
+ConfigArgParse
+h5py
+Bio
+leidenalg

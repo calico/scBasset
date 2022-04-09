@@ -13,10 +13,10 @@ import scipy
 import configargparse
 import sys
 import gc
+import pandas as pd
 from datetime import datetime
 from scbasset.utils import *
 from scbasset.basenji_utils import *
-
 
 def make_parser():
     parser = configargparse.ArgParser(
@@ -29,19 +29,23 @@ def make_parser():
                        help='batch size. Default to 128')
     parser.add_argument('--lr', type=float, default=0.01,
                        help='learning rate. Default to 0.01')
+    parser.add_argument('--batch_csv', type=str,
+                       help='csv file dummy coding for batch information.')
+    parser.add_argument('--l2', type=float, default=0,
+                       help='regularization on cell embedding path. Increasing this value results in increased mixing. Default to 0. User can try 10e-9, 10e-8, etc.')
     parser.add_argument('--epochs', type=int, default=1000,
                        help='Number of epochs to train. Default to 1000.')
     parser.add_argument('--out_path', type=str, default='output',
                        help='Output path. Default to ./output/')
     parser.add_argument('--print_mem', type=bool, default=True,
                        help='whether to output cpu memory usage.')
-
     return parser
 
+
 def main():
+    
     parser = make_parser()
     args = parser.parse_args()
-    
     preprocess_folder = args.input_folder
     bottleneck_size = args.bottleneck
     batch_size = args.batch_size
@@ -49,22 +53,22 @@ def main():
     epochs = args.epochs
     out_dir = args.out_path
     print_mem = args.print_mem
+    l2_reg = args.l2
+    batch_file = args.batch_csv
     
     train_data = '%s/train_seqs.h5'%preprocess_folder
     val_data = '%s/val_seqs.h5'%preprocess_folder
     split_file = '%s/splits.h5'%preprocess_folder
     ad = anndata.read_h5ad('%s/ad.h5ad'%preprocess_folder)
+    batch_m = pd.read_csv(batch_file, index_col=0)
     n_cells = ad.shape[0]
     
-    # convert to csr matrix
+    # csr matrices
     with h5py.File(split_file, 'r') as hf:
         train_ids = hf['train_ids'][:]
         val_ids = hf['val_ids'][:]
-
-    m = ad.X.tocoo().transpose().tocsr()
-    if print_mem:
-        print_memory()     # memory usage
     
+    m = ad.X.tocoo().transpose().tocsr()
     del ad
     gc.collect()
     
@@ -91,7 +95,7 @@ def main():
     ).batch(128).prefetch(tf.data.AUTOTUNE)
     
     # build model
-    model = make_model(bottleneck_size, n_cells)
+    model = make_model_bc(bottleneck_size, n_cells, batch_m, l2_1=l2_reg, l2_2=0)
 
     # compile model
     loss_fn = tf.keras.losses.BinaryCrossentropy()
@@ -102,8 +106,8 @@ def main():
 
     # earlystopping, track train AUC
     filepath = '%s/best_model.h5'%out_dir
-    
-    # tensorboard
+
+    # tensorboard profiler
     logs = "logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
     
     callbacks = [
@@ -113,7 +117,7 @@ def main():
         tf.keras.callbacks.EarlyStopping(monitor='auc', min_delta=1e-6, 
                                          mode='max', patience=50, verbose=1),
     ]
-    
+        
     # train the model
     history = model.fit(
         train_ds,
@@ -121,7 +125,7 @@ def main():
         callbacks=callbacks,
         validation_data=val_ds)
     pickle.dump(history.history, open('%s/history.pickle'%out_dir, 'wb'))
-    
 
 if __name__ == "__main__":
     main()
+                
