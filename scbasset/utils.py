@@ -433,7 +433,7 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
     return accessibility_norm
 
 
-def pred_on_fasta(fa, model):
+def pred_on_fasta(fa, model, bc=False):
     """Run a trained model on a fasta file.
     Args:
         fa:             fasta file to run on. Need to have a fixed size of 1344. Default
@@ -445,11 +445,11 @@ def pred_on_fasta(fa, model):
     records = list(SeqIO.parse(fa, "fasta"))
     seqs = [str(i.seq) for i in records]
     seqs_1hot = np.array([dna_1hot(i) for i in seqs])
-    pred = imputation_Y_normalize(seqs_1hot, model)
+    pred = imputation_Y_normalize(seqs_1hot, model, bc_model=bc)
     return pred
 
 
-def motif_score(tf, model, motif_fasta_folder):
+def motif_score(tf, model, motif_fasta_folder, bc=False):
     """score motifs for any given TF.
     Args:
         tf:             TF of interest. By default we only provide TFs to score in
@@ -469,8 +469,8 @@ def motif_score(tf, model, motif_fasta_folder):
     fasta_motif = "%s/shuffled_peaks_motifs/%s.fasta" % (motif_fasta_folder, tf)
     fasta_bg = "%s/shuffled_peaks.fasta" % motif_fasta_folder
 
-    pred_motif = pred_on_fasta(fasta_motif, model)
-    pred_bg = pred_on_fasta(fasta_bg, model)
+    pred_motif = pred_on_fasta(fasta_motif, model, bc=bc)
+    pred_bg = pred_on_fasta(fasta_bg, model, bc=bc)
     tf_score = pred_motif.mean(axis=0) - pred_bg.mean(axis=0)
     tf_score = (tf_score - tf_score.mean()) / tf_score.std()
     return tf_score
