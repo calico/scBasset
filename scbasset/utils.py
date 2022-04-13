@@ -422,7 +422,7 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
         accessibility_norm = np.dot(Y_pred.squeeze(), w)
 
     # scaling
-    if scale_method == "all_positive":
+    if scale_method == "positive":
         accessibility_norm = accessibility_norm - np.min(accessibility_norm)
     if scale_method == "sigmoid":
         accessibility_norm = np.divide(
@@ -433,7 +433,7 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
     return accessibility_norm
 
 
-def pred_on_fasta(fa, model, bc=False):
+def pred_on_fasta(fa, model, bc=False, scale_method=None):
     """Run a trained model on a fasta file.
     Args:
         fa:             fasta file to run on. Need to have a fixed size of 1344. Default
@@ -445,7 +445,7 @@ def pred_on_fasta(fa, model, bc=False):
     records = list(SeqIO.parse(fa, "fasta"))
     seqs = [str(i.seq) for i in records]
     seqs_1hot = np.array([dna_1hot(i) for i in seqs])
-    pred = imputation_Y_normalize(seqs_1hot, model, bc_model=bc)
+    pred = imputation_Y_normalize(seqs_1hot, model, bc_model=bc, scale_method=scale_method)
     return pred
 
 
