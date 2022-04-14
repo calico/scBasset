@@ -13,7 +13,7 @@ def make_parser():
     parser = configargparse.ArgParser(
         description="Preprocess anndata to generate inputs for scBasset.")
     parser.add_argument('--ad_file', type=str,
-                       help='Input scATAC anndata. .var must have chr, start, end columns.')
+                       help='Input scATAC anndata. .var must have chr, start, end columns. anndata.X must be in csr format.')
     parser.add_argument('--input_fasta', type=str,
                        help='Genome fasta file.')
     parser.add_argument('--out_path', type=str, default='./processed',

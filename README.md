@@ -61,7 +61,7 @@ Preprocess anndata to generate inputs for scBasset.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --ad_file AD_FILE     Input scATAC anndata. .var must have 'chr', 'start', 'end' columns.
+  --ad_file AD_FILE     Input scATAC anndata. .var must have 'chr', 'start', 'end' columns. anndata.X must be in csr format.
   --input_fasta INPUT_FASTA
                         Genome fasta file.
   --out_path OUT_PATH   Output path. Default to ./processed/

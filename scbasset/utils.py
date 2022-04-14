@@ -5,6 +5,7 @@ utility functions that support scBasset.
 import anndata
 import h5py
 import time
+import os
 import psutil
 import numpy as np
 import tensorflow as tf
