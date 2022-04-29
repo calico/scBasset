@@ -289,7 +289,10 @@ def conv_block(
         filters = inputs.shape[-1]
 
     # activation
-    current = GELU()(current)
+    if activation=="gelu":
+        current = GELU()(current)
+    else:
+        current = tf.keras.layers.ReLU()(current)
 
     # convolution
     current = conv_layer(
@@ -414,7 +417,10 @@ def dense_block(
         units = inputs.shape[-1]
 
     # activation
-    current = GELU()(current)
+    if activation=="gelu":
+        current = GELU()(current)
+    else:
+        current = tf.keras.layers.ReLU()(current)
 
     # flatten
     if flatten:
