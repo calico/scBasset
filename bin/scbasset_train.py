@@ -80,7 +80,7 @@ def main():
              tf.TensorSpec(shape=(1344,4), dtype=tf.int8),
              tf.TensorSpec(shape=(n_cells), dtype=tf.int8),
         )
-    ).shuffle(2000, reshuffle_each_iteration=True).batch(128).prefetch(tf.data.AUTOTUNE)
+    ).shuffle(2000, reshuffle_each_iteration=True).batch(batch_size).prefetch(tf.data.AUTOTUNE)
     
     val_ds = tf.data.Dataset.from_generator(
         generator(val_data, m_val), 
@@ -88,7 +88,7 @@ def main():
              tf.TensorSpec(shape=(1344,4), dtype=tf.int8),
              tf.TensorSpec(shape=(n_cells), dtype=tf.int8),
         )
-    ).batch(128).prefetch(tf.data.AUTOTUNE)
+    ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
     
     # build model
     model = make_model(bottleneck_size, n_cells)
