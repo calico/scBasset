@@ -489,9 +489,10 @@ def ism(seq_ref_1hot, model):
     m = np.zeros((model.output.shape[1], seq_ref_1hot.shape[0], seq_ref_1hot.shape[1]))
     
     # predication of reference seq
-    latent = new_model.predict(np.array([seq_ref_1hot]))
-    pred_ref = np.dot(latent.squeeze(), w)
-    
+    seqs_1hot_tf = tf.convert_to_tensor(seq_ref_1hot, dtype=tf.float32)[tf.newaxis]
+    latent_ref = new_model(seqs_1hot_tf)
+    latent_ref = tf.squeeze(latent_ref, axis=[0,1])
+
     # compute ism
     for i in range(seq_ref_1hot.shape[0]):
         out = []
@@ -500,8 +501,13 @@ def ism(seq_ref_1hot, model):
             tmp[i,:] = [False, False, False, False]
             tmp[i,j] = True
             out += [tmp]
-        latent = new_model.predict(np.array(out))
-        pred = np.dot(latent.squeeze(), w)
-        m[:,i,:] = (pred - pred_ref).transpose()
-    
+        
+        out_tf = tf.convert_to_tensor(np.array(out), dtype=tf.float32)
+        latent = new_model(out_tf)
+        latent = tf.squeeze(latent, axis=[1])
+        latent = latent - latent_ref # ism on latent space
+
+        pred = tf.einsum('nb,bt->nt', latent, w)
+        m[:,i,:] = pred.numpy().transpose()
+        
     return m
