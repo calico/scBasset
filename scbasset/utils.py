@@ -401,7 +401,7 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
         array:          a peak*cell imputed accessibility matrix. Sequencing depth corrected
                         for. scale_method=None, don't do any scaling of output. The raw
                         normalized output would have both positive and negative values.
-                        scale_method="all_positive" scales the output by subtracting minimum value.
+                        scale_method="positive" scales the output by subtracting minimum value.
                         scale_method="sigmoid" scales the output by sigmoid transform.
     """
     if bc_model:
