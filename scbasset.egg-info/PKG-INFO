@@ -235,9 +235,9 @@ The best way to get familiar with scBasset is to go over the tutorials. Starting
 [Get cell embeddings](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/evaluate.ipynb)   
 [Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/score_motif.ipynb)  
 [ISM_visualization](https://github.com/calico/scBasset/blob/main/examples/ISM/ism.ipynb)   
-[ISM_PWM](https://github.com/calico/scBasset/blob/main/examples/ISM/motif_analysis.ipynb)   
-
-
+[ISM_PWM](https://github.com/calico/scBasset/blob/main/examples/ISM/motif_analysis.ipynb)    
+[batch correction tutorial](https://github.com/calico/scBasset/blob/main/examples/batch_correction/buen_batch_correction.ipynb)    
+ 
 ### 1. download tutorial data.
 
 Follow [Download tutorial data](https://github.com/calico/scBasset/blob/main/examples/download.ipynb) to download data used for tutorial.
@@ -260,7 +260,7 @@ Preprocess anndata to generate inputs for scBasset.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --ad_file AD_FILE     Input scATAC anndata. .var must have 'chr', 'start', 'end' columns.
+  --ad_file AD_FILE     Input scATAC anndata. .var must have 'chr', 'start', 'end' columns. anndata.X must be in csr format.
   --input_fasta INPUT_FASTA
                         Genome fasta file.
   --out_path OUT_PATH   Output path. Default to ./processed/
@@ -268,7 +268,7 @@ optional arguments:
 Note: if you are generating peak atlas and count matrix from other sources such as ArchR. Make sure the peak atlas and count matrix have matching peak order! For ArchR, use rowRanges(getMatrixFromProject(proj,"PeakMatrix")) as the peaks so that the peak order matches getMatrixFromProject(proj, "PeakMatrix"). Peaks in getPeakSet(proj) could have a different order!
 
 ### 4. train scBasset model.
-scBasset/bin/scbasset_train.py is used as a command line tool for training model. Use 'scbasset_train.py --help' to see help page. scbasset_train.py takes as input the folder path containing preprocessed h5 files. scBasset by default trains for 1000 epochs with early-stopping. Training takes ~13s per epoch for example multiome PBMC dataset on V100 gpu. 
+scBasset/bin/scbasset_train.py is used as a command line tool for training model. Use 'scbasset_train.py --help' to see help page. scbasset_train.py takes as input the folder path containing preprocessed h5 files. scBasset by default trains for 1000 epochs with early-stopping on **train auc**. We focused on **training auROC** instead of validation auROC for model selection because we observed that, across multiple datasets, the model continues to improve cell embeddings even after the point where the validation auROC has plateaued. We observed that validation auROC during the later stages of training is stable, suggesting that the model is not prone to overfitting. Our analyses indicate that the 32 units bottleneck layer is a major impediment to true overfitting. Training takes ~13s per epoch for example multiome PBMC dataset on V100 gpu. 
 ```
 usage: scbasset_train.py [-h] [--input_folder INPUT_FOLDER]
                          [--bottleneck BOTTLENECK] [--batch_size BATCH_SIZE]
@@ -300,6 +300,10 @@ See the tutorial [Get cell embeddings](https://github.com/calico/scBasset/blob/m
 See the tutorial [Motif scoring](https://github.com/calico/scBasset/blob/main/examples/PBMC_multiome/score_motif.ipynb) for how to score motifs on a per cell basis using motif injection method. For motif injection, we first generated dinucleotides shuffled background sequences, and inserted motif of interest to the center of those sequences. We provided such sequences for motifs in the MEME Suite CIS-BP 1.0 [Homo sapiens motif collection](https://meme-suite.org/meme/db/motifs) at [Homo_sapiens_motif_fasta](https://storage.googleapis.com/scbasset_tutorial_data/Homo_sapiens_motif_fasta.tar.gz). To score on additional motifs, follow make_fasta.R in the tarball to create dinucleotide shuffled sequences with and without motifs of interest. 
 
 See the tutorial [ISM_visualization](https://github.com/calico/scBasset/blob/main/examples/ISM/ism.ipynb) for performing in silico saturation mutagenesis on an example peak of interest, and visualizing the ISM scores aggregated by cell type. See tutorial [ISM_PWM](https://github.com/calico/scBasset/blob/main/examples/ISM/motif_analysis.ipynb) for computing Pearson correlation between ISM and motif match.
+
+### 6. batch correction.
+
+scBasset can be adapted to perform batch correction. The /bin/scbasset_bc_train.py commandline tool is for training scBasset with batch correction. See [batch correction tutorial](https://github.com/calico/scBasset/blob/main/examples/batch_correction/buen_batch_correction.ipynb) for an example of correcting for donor effect on Buenrostro2018 dataset.  We use a parameter l2 to control for the level of mixing. Usually a default l2 value of 0 gives good mixing performance. In cases where default l2 doesn't mix enough, you can try tune up l2 (1e-9, 1e-8 etc).
 
 ## Basenji
 scBasset provides a fixed architecture that we experimented to perform best on scATAC datasets. The key components of scBasset architecture come from [Basenji](https://github.com/calico/basenji). Although scBasset can work as a stand-alone package, we strongly suggest installing [Basenji](https://github.com/calico/basenji) if you want to experiment with alternative archictures. See [link](link) as an example of how to create a Json file and instruct Basenji to train a scBasset model.
