@@ -427,12 +427,12 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method='sigmoid'):
     # scaling
     if scale_method == "positive":
         accessibility_norm = accessibility_norm - np.min(accessibility_norm)
-        
+    
     if scale_method == "sigmoid":
         median_depth = np.median(intercepts)
         accessibility_norm = np.divide(
             1,
-            1 + np.exp(-(accessibility_norm+median_depth)),
+            1 + np.exp(-(accessibility_norm+median_depth)))
     
     return accessibility_norm
 
