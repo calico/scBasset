@@ -392,7 +392,7 @@ def imputation_Y(X, model, bc_model=False):
 
 
 # perform imputation. Depth normalized.
-def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
+def imputation_Y_normalize(X, model, bc_model=False, scale_method='sigmoid'):
     """Perform imputation. Normalize for depth.
     Args:
         X:              feature matrix from h5.
@@ -411,6 +411,7 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
         )
         Y_pred = new_model.predict(X)
         w = model.layers[-6].get_weights()[0]
+        intercepts = model.layers[-6].get_weights()[1]
         accessibility_norm = np.dot(Y_pred.squeeze(), w)
     
     else:
@@ -420,16 +421,18 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
         )
         Y_pred = new_model.predict(X)
         w = model.layers[-3].get_weights()[0]
+        intercepts = model.layers[-3].get_weights()[1]
         accessibility_norm = np.dot(Y_pred.squeeze(), w)
 
     # scaling
     if scale_method == "positive":
         accessibility_norm = accessibility_norm - np.min(accessibility_norm)
+        
     if scale_method == "sigmoid":
+        median_depth = np.median(intercepts)
         accessibility_norm = np.divide(
             1,
-            1 + np.exp(-accessibility_norm),
-        )
+            1 + np.exp(-(accessibility_norm+median_depth)),
     
     return accessibility_norm
 
