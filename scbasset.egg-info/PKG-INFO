@@ -194,7 +194,6 @@ License:                                  Apache License
            See the License for the specific language governing permissions and
            limitations under the License.
         
-Platform: UNKNOWN
 License-File: LICENSE
 
 <img src="https://github.com/calico/scBasset/blob/main/docs/architecture.png" width=100% height=100%>
@@ -307,5 +306,3 @@ scBasset can be adapted to perform batch correction. The /bin/scbasset_bc_train.
 
 ## Basenji
 scBasset provides a fixed architecture that we experimented to perform best on scATAC datasets. The key components of scBasset architecture come from [Basenji](https://github.com/calico/basenji). Although scBasset can work as a stand-alone package, we strongly suggest installing [Basenji](https://github.com/calico/basenji) if you want to experiment with alternative archictures. See [link](link) as an example of how to create a Json file and instruct Basenji to train a scBasset model.
-
-

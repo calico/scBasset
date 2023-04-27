@@ -55,26 +55,34 @@ def main():
 
     train_data = '%s/train_seqs.h5'%preprocess_folder
     val_data = '%s/val_seqs.h5'%preprocess_folder
-    split_file = '%s/splits.h5'%preprocess_folder
-    ad = anndata.read_h5ad('%s/ad.h5ad'%preprocess_folder)
-    n_cells = ad.shape[0]
     
-    # convert to csr matrix
-    with h5py.File(split_file, 'r') as hf:
-        train_ids = hf['train_ids'][:]
-        val_ids = hf['val_ids'][:]
+    if os.path.exists('%s/m_train.npz'%preprocess_folder) & os.path.exists('%s/m_val.npz'%preprocess_folder):
+        m_train = sparse.load_npz('%s/m_train.npz'%preprocess_folder)
+        m_val = sparse.load_npz('%s/m_val.npz'%preprocess_folder)
+        n_cells = m_train.shape[1]
+        
+    # for compatibility with previous version
+    else:
+        ad = anndata.read_h5ad('%s/ad.h5ad'%preprocess_folder)
+        split_file = '%s/splits.h5'%preprocess_folder
+        n_cells = ad.shape[0]
+        
+        # convert to csr matrix
+        with h5py.File(split_file, 'r') as hf:
+            train_ids = hf['train_ids'][:]
+            val_ids = hf['val_ids'][:]
 
-    m = ad.X.tocoo().transpose().tocsr()
+        m = ad.X.tocoo().transpose().tocsr()
+        del ad
+        gc.collect()
+        m_train = m[train_ids,:]
+        m_val = m[val_ids,:]
+        del m
+        gc.collect()
+    
     if print_mem:
-        print_memory()     # memory usage
+            print_memory()     # memory usage
     
-    del ad
-    gc.collect()
-    
-    m_train = m[train_ids,:]
-    m_val = m[val_ids,:]
-    del m
-    gc.collect()
     
     # generate tf.datasets
     train_ds = tf.data.Dataset.from_generator(
@@ -105,7 +113,6 @@ def main():
 
     # tensorboard
     logs = "logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-    
     filepath_best = '%s/best_model.h5'%out_dir
 
     if test:
