@@ -105,10 +105,11 @@ def main():
 
     # tensorboard
     logs = "logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    
+    filepath_best = '%s/best_model.h5'%out_dir
 
     if test:
         filepath_epoch = '%s/model_{epoch:d}.h5'%out_dir
-        filepath_best = '%s/best_model.h5'%out_dir
 
         callbacks = [
             tf.keras.callbacks.TensorBoard(out_dir),

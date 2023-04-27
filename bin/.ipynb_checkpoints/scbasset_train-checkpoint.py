@@ -35,7 +35,9 @@ def make_parser():
                        help='Output path. Default to ./output/')
     parser.add_argument('--print_mem', type=bool, default=True,
                        help='whether to output cpu memory usage.')
-
+    parser.add_argument('--test', action='store_true',
+                       help='test mode. If true, checkpoint every epoch.')
+    
     return parser
 
 def main():
@@ -49,7 +51,8 @@ def main():
     epochs = args.epochs
     out_dir = args.out_path
     print_mem = args.print_mem
-    
+    test = args.test
+
     train_data = '%s/train_seqs.h5'%preprocess_folder
     val_data = '%s/val_seqs.h5'%preprocess_folder
     split_file = '%s/splits.h5'%preprocess_folder
@@ -100,20 +103,44 @@ def main():
                   metrics=[tf.keras.metrics.AUC(curve='ROC', multi_label=True),
                            tf.keras.metrics.AUC(curve='PR', multi_label=True)])
 
-    # earlystopping, track train AUC
-    filepath = '%s/best_model.h5'%out_dir
-    
     # tensorboard
     logs = "logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
     
-    callbacks = [
-        tf.keras.callbacks.TensorBoard(out_dir),
-        tf.keras.callbacks.ModelCheckpoint(filepath, save_best_only=True, 
-                                           save_weights_only=True, monitor='auc', mode='max'),
-        tf.keras.callbacks.EarlyStopping(monitor='auc', min_delta=1e-6, 
-                                         mode='max', patience=50, verbose=1),
-    ]
-    
+    filepath_best = '%s/best_model.h5'%out_dir
+
+    if test:
+        filepath_epoch = '%s/model_{epoch:d}.h5'%out_dir
+
+        callbacks = [
+            tf.keras.callbacks.TensorBoard(out_dir),
+
+            tf.keras.callbacks.ModelCheckpoint(filepath_epoch,
+                                               save_best_only=False,
+                                               save_weights_only=True,
+                                               save_freq='epoch', period=1),
+
+            tf.keras.callbacks.ModelCheckpoint(filepath_best,
+                                               save_best_only=True,
+                                               save_weights_only=True,
+                                               monitor='auc', mode='max'),
+
+            tf.keras.callbacks.EarlyStopping(monitor='auc', min_delta=1e-6,
+                                             mode='max', patience=50, verbose=1),
+        ]
+
+    else:
+        filepath = '%s/best_model.h5'%out_dir
+
+        callbacks = [
+            tf.keras.callbacks.TensorBoard(out_dir),
+            tf.keras.callbacks.ModelCheckpoint(filepath_best,
+                                               save_best_only=True,
+                                               save_weights_only=True,
+                                               monitor='auc', mode='max'),
+            tf.keras.callbacks.EarlyStopping(monitor='auc', min_delta=1e-6,
+                                             mode='max', patience=50, verbose=1),
+        ]
+
     # train the model
     history = model.fit(
         train_ds,
