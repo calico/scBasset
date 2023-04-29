@@ -33,10 +33,13 @@ def make_parser():
                        help='Number of epochs to train. Default to 1000.')
     parser.add_argument('--out_path', type=str, default='output',
                        help='Output path. Default to ./output/')
+    parser.add_argument('--trained_model', type=str, default=None,
+                       help='continue from a pre-trained model.')
     parser.add_argument('--print_mem', type=bool, default=True,
                        help='whether to output cpu memory usage.')
     parser.add_argument('--test', action='store_true',
                        help='test mode. If true, checkpoint every epoch.')
+    
     
     return parser
 
@@ -50,6 +53,7 @@ def main():
     lr = args.lr
     epochs = args.epochs
     out_dir = args.out_path
+    trained_model = args.trained_model
     print_mem = args.print_mem
     test = args.test
 
@@ -83,7 +87,6 @@ def main():
     if print_mem:
             print_memory()     # memory usage
     
-    
     # generate tf.datasets
     train_ds = tf.data.Dataset.from_generator(
         generator(train_data, m_train), 
@@ -103,6 +106,10 @@ def main():
     
     # build model
     model = make_model(bottleneck_size, n_cells)
+    
+    # load model if provided trained model
+    if trained_model is not None:
+        model.load_weights(trained_model)
 
     # compile model
     loss_fn = tf.keras.losses.BinaryCrossentropy()
