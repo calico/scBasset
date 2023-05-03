@@ -437,7 +437,7 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method='sigmoid'):
     return accessibility_norm
 
 
-def pred_on_fasta(fa, model, bc=False, scale_method=None):
+def pred_on_fasta(fa, model, bc=False, scale_method='sigmoid'):
     """Run a trained model on a fasta file.
     Args:
         fa:             fasta file to run on. Need to have a fixed size of 1344. Default
