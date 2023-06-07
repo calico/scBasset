@@ -392,7 +392,7 @@ def imputation_Y(X, model, bc_model=False):
 
 
 # perform imputation. Depth normalized.
-def imputation_Y_normalize(X, model, bc_model=False, scale_method='sigmoid'):
+def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
     """Perform imputation. Normalize for depth.
     Args:
         X:              feature matrix from h5.
@@ -429,15 +429,16 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method='sigmoid'):
         accessibility_norm = accessibility_norm - np.min(accessibility_norm)
     
     if scale_method == "sigmoid":
-        median_depth = np.median(intercepts)
+        # norm_depth = np.quantile(intercepts, quantile)
+        norm_depth = 0 # empirically i find 0 works best
         accessibility_norm = np.divide(
             1,
-            1 + np.exp(-(accessibility_norm+median_depth)))
+            1 + np.exp(-(accessibility_norm+norm_depth)))
     
     return accessibility_norm
 
 
-def pred_on_fasta(fa, model, bc=False, scale_method='sigmoid'):
+def pred_on_fasta(fa, model, bc=False, scale_method=None):
     """Run a trained model on a fasta file.
     Args:
         fa:             fasta file to run on. Need to have a fixed size of 1344. Default
@@ -453,7 +454,7 @@ def pred_on_fasta(fa, model, bc=False, scale_method='sigmoid'):
     return pred
 
 
-def motif_score(tf, model, motif_fasta_folder, bc=False):
+def motif_score(tf, model, motif_fasta_folder, bc=False, scale_method=None):
     """score motifs for any given TF.
     Args:
         tf:             TF of interest. By default we only provide TFs to score in
@@ -473,8 +474,9 @@ def motif_score(tf, model, motif_fasta_folder, bc=False):
     fasta_motif = "%s/shuffled_peaks_motifs/%s.fasta" % (motif_fasta_folder, tf)
     fasta_bg = "%s/shuffled_peaks.fasta" % motif_fasta_folder
 
-    pred_motif = pred_on_fasta(fasta_motif, model, bc=bc)
-    pred_bg = pred_on_fasta(fasta_bg, model, bc=bc)
+    pred_motif = pred_on_fasta(fasta_motif, model, bc=bc, scale_method=scale_method)
+    pred_bg = pred_on_fasta(fasta_bg, model, bc=bc, scale_method=scale_method)
+    
     tf_score = pred_motif.mean(axis=0) - pred_bg.mean(axis=0)
     tf_score = (tf_score - tf_score.mean()) / tf_score.std()
     return tf_score
@@ -510,7 +512,9 @@ def ism(seq_ref_1hot, model):
         latent = tf.squeeze(latent, axis=[1])
         latent = latent - latent_ref # ism on latent space
 
+        # this is pre-sigmoid
         pred = tf.einsum('nb,bt->nt', latent, w)
+
         m[:,i,:] = pred.numpy().transpose()
         
     return m
