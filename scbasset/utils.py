@@ -429,10 +429,11 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method='sigmoid'):
         accessibility_norm = accessibility_norm - np.min(accessibility_norm)
     
     if scale_method == "sigmoid":
-        median_depth = np.median(intercepts)
+        #median_depth = np.median(intercepts)
+        norm_depth = 0
         accessibility_norm = np.divide(
             1,
-            1 + np.exp(-(accessibility_norm+median_depth)))
+            1 + np.exp(-(accessibility_norm+norm_depth)))
     
     return accessibility_norm
 
@@ -453,7 +454,7 @@ def pred_on_fasta(fa, model, bc=False, scale_method='sigmoid'):
     return pred
 
 
-def motif_score(tf, model, motif_fasta_folder, bc=False):
+def motif_score(tf, model, motif_fasta_folder, bc=False, scale_method='sigmoid'):
     """score motifs for any given TF.
     Args:
         tf:             TF of interest. By default we only provide TFs to score in
@@ -473,8 +474,8 @@ def motif_score(tf, model, motif_fasta_folder, bc=False):
     fasta_motif = "%s/shuffled_peaks_motifs/%s.fasta" % (motif_fasta_folder, tf)
     fasta_bg = "%s/shuffled_peaks.fasta" % motif_fasta_folder
 
-    pred_motif = pred_on_fasta(fasta_motif, model, bc=bc)
-    pred_bg = pred_on_fasta(fasta_bg, model, bc=bc)
+    pred_motif = pred_on_fasta(fasta_motif, model, bc=bc, scale_method='sigmoid')
+    pred_bg = pred_on_fasta(fasta_bg, model, bc=bc, scale_method='sigmoid')
     tf_score = pred_motif.mean(axis=0) - pred_bg.mean(axis=0)
     tf_score = (tf_score - tf_score.mean()) / tf_score.std()
     return tf_score
