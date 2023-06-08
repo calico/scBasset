@@ -238,8 +238,6 @@ def make_model(
         model.summary()
     return model
 
-
-
 def make_model_bc(
     bottleneck_size,
     n_cells,
@@ -392,7 +390,7 @@ def imputation_Y(X, model, bc_model=False):
 
 
 # perform imputation. Depth normalized.
-def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
+def imputation_Y_normalize(X, model, bc_model=False, scale_method='sigmoid'):
     """Perform imputation. Normalize for depth.
     Args:
         X:              feature matrix from h5.
@@ -438,7 +436,7 @@ def imputation_Y_normalize(X, model, bc_model=False, scale_method=None):
     return accessibility_norm
 
 
-def pred_on_fasta(fa, model, bc=False, scale_method=None):
+def pred_on_fasta(fa, model, bc=False, scale_method='sigmoid'):
     """Run a trained model on a fasta file.
     Args:
         fa:             fasta file to run on. Need to have a fixed size of 1344. Default
@@ -454,7 +452,7 @@ def pred_on_fasta(fa, model, bc=False, scale_method=None):
     return pred
 
 
-def motif_score(tf, model, motif_fasta_folder, bc=False, scale_method=None):
+def motif_score(tf, model, motif_fasta_folder, bc=False, scale_method='sigmoid'):
     """score motifs for any given TF.
     Args:
         tf:             TF of interest. By default we only provide TFs to score in
@@ -478,28 +476,59 @@ def motif_score(tf, model, motif_fasta_folder, bc=False, scale_method=None):
     pred_bg = pred_on_fasta(fasta_bg, model, bc=bc, scale_method=scale_method)
     
     tf_score = pred_motif.mean(axis=0) - pred_bg.mean(axis=0)
-    tf_score = (tf_score - tf_score.mean()) / tf_score.std()
+    # do not normalize
+    #tf_score = (tf_score - tf_score.mean()) / tf_score.std()
     return tf_score
 
-# compute ism from sequence
+# compute ism
 def ism(seq_ref_1hot, model):
-    
-    new_model = tf.keras.Model(
-        inputs=model.layers[0].input,
-        outputs=model.layers[-4].output,
-    )
-    w = model.layers[-3].get_weights()[0]
-
-    # output matrix
-    m = np.zeros((model.output.shape[1], seq_ref_1hot.shape[0], seq_ref_1hot.shape[1]))
+    # input: 
+    # - 1hot encoded sequence
+    # - scBasset model
+    # output:
+    # - n_cells*1344*4 0-centered ISM tensor
     
     # predication of reference seq
     seqs_1hot_tf = tf.convert_to_tensor(seq_ref_1hot, dtype=tf.float32)[tf.newaxis]
-    latent_ref = new_model(seqs_1hot_tf)
-    latent_ref = tf.squeeze(latent_ref, axis=[0,1])
+    pred_ref = imputation_Y_normalize(seqs_1hot_tf, model, scale_method='sigmoid')
 
     # compute ism
+    out = []
     for i in range(seq_ref_1hot.shape[0]):
+        for j in range(4):
+            tmp = np.copy(seq_ref_1hot)
+            tmp[i,:] = [False, False, False, False]
+            tmp[i,j] = True
+            out += [tmp]
+        
+    out_tf = tf.convert_to_tensor(np.array(out), dtype=tf.float32)
+    pred = imputation_Y_normalize(out_tf, model, scale_method='sigmoid')
+    res = pred - pred_ref
+    
+    m = res.reshape((1344, 4, res.shape[1])).transpose((2,0,1))
+    m_norm = m - np.repeat(m.mean(axis=2)[:,:,np.newaxis], 4, axis=2)
+
+    return m_norm
+
+
+def ism_motif(seq_ref_1hot, model, start, end):
+    # given a scbasset model
+    # predict accessibility of the seq
+    # compute ism only for a range of nucleotides
+    
+    # input: 
+    # - 1hot encoded sequence
+    # - scBasset model
+    # output:
+    # - n_cell*(end-start)*4 0-centered ISM tensor
+
+    # reference sequence
+    seqs_1hot_tf = tf.convert_to_tensor(seq_ref_1hot, dtype=tf.float32)[tf.newaxis]
+    pred_ref = imputation_Y_normalize(seqs_1hot_tf, model, scale_method='sigmoid')
+    
+    m = np.zeros((model.output.shape[1], end-start, 4))
+
+    for i in range(start, end):
         out = []
         for j in range(4):
             tmp = np.copy(seq_ref_1hot)
@@ -508,13 +537,11 @@ def ism(seq_ref_1hot, model):
             out += [tmp]
         
         out_tf = tf.convert_to_tensor(np.array(out), dtype=tf.float32)
-        latent = new_model(out_tf)
-        latent = tf.squeeze(latent, axis=[1])
-        latent = latent - latent_ref # ism on latent space
+        pred = imputation_Y_normalize(out_tf, model, scale_method='sigmoid')
+        res = pred - pred_ref
 
-        # this is pre-sigmoid
-        pred = tf.einsum('nb,bt->nt', latent, w)
-
-        m[:,i,:] = pred.numpy().transpose()
+        m[:,i-start,:] = res.transpose()
         
-    return m
+    m_norm = m - np.repeat(m.mean(axis=2)[:,:,np.newaxis], 4, axis=2)
+
+    return m_norm
