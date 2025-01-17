@@ -105,6 +105,3 @@ See the tutorial [ISM_visualization](https://github.com/calico/scBasset/blob/mai
 ### 6. batch correction.
 
 scBasset can be adapted to perform batch correction. The /bin/scbasset_bc_train.py commandline tool is for training scBasset with batch correction. See [batch correction tutorial](https://github.com/calico/scBasset/blob/main/examples/batch_correction/buen_batch_correction.ipynb) for an example of correcting for donor effect on Buenrostro2018 dataset.  We use a parameter l2 to control for the level of mixing. Usually a default l2 value of 0 gives good mixing performance. In cases where default l2 doesn't mix enough, you can try tune up l2 (1e-9, 1e-8 etc).
-
-## Basenji
-scBasset provides a fixed architecture that we experimented to perform best on scATAC datasets. The key components of scBasset architecture come from [Basenji](https://github.com/calico/basenji). Although scBasset can work as a stand-alone package, we strongly suggest installing [Basenji](https://github.com/calico/basenji) if you want to experiment with alternative archictures. See [link](link) as an example of how to create a Json file and instruct Basenji to train a scBasset model.
