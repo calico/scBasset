@@ -90,7 +90,7 @@ def main():
         vmax = abs(vmax)
         vmin = -vmax
             
-    for i in motifs.index[:5]:
+    for i in motifs.index:
         peak_id = motifs.loc[i, 'sequence_name']
         tf = motifs.loc[i, 'tf']
         motif_id = motifs.loc[i, 'motif_id']
@@ -125,7 +125,7 @@ def main():
             axs[j].set_ylabel(cts[j])
         
         # plot phylop
-        sns.lineplot(np.arange(end-start), phylop[start:end], ax=axs[j+1])
+        sns.lineplot(x=np.arange(end-start), y=phylop[start:end], ax=axs[j+1])
         axs[j+1].set_ylabel('phyloP')
         axs[j+1].set_xlim(0, end-start-1)
         

@@ -167,10 +167,10 @@ def main():
     hits['hit_id'] = [i[0]+'_'+i[1]+'_'+str(i[2])+'_'+i[3] for i in zip(hits['sequence_name'],hits['motif_id'], 
                                                                         hits['start'], hits['strand'])]
     hits.index = hits['hit_id']
-    hits['dot'] = 0
-    hits['dot_pval'] = 1
-    hits['ism'] = 0
-    hits['ism_pval'] = 1
+    hits['dot'] = 0.0
+    hits['dot_pval'] = 1.0
+    hits['ism'] = 0.0
+    hits['ism_pval'] = 1.0
 
     m_ism = np.zeros((hits.shape[0], ad.shape[0]))
     

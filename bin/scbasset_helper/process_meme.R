@@ -104,6 +104,10 @@ for (i in 1:length(motifs)) {
     print(view_motifs(motifs[[i]]))
     dev.off()
     
+    png(sprintf('%s/motif_logos/%s_rc.png', outdir, motif_name), 900, 200)
+    print(view_motifs(motif_rc(motifs[[i]])))
+    dev.off()
+
     if (i%%100==1){print(i)}
 }
 

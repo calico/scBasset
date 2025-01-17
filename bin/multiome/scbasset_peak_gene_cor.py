@@ -24,7 +24,7 @@ filter candidate peaks by:
 
 Additional notes:
 peak-gene cor: pearsonr across all expressed cells in dataset.
-expressed cells: acc>0.1, log2rp10k>0.1.
+expressed cells: acc>0.1, log2rpm>0.1.
 
 This function takes as input:
     - scvi denoised ad_rna.
@@ -47,6 +47,7 @@ def main():
     parser.add_option('--model', dest='model', help='trained scBasset model h5.')
     parser.add_option('--fasta', dest='fasta', help='fasta file.')
     parser.add_option('--gene', dest='gene', help='gene name.')
+    parser.add_option('--dist_thres',  dest='dist_thres', type="int", default=2000, help='distance threshold to consider a peak promoter (promoter pk are always included).')
     parser.add_option('--thres',  dest='thres', type="float", default=0.4, help='peak-gene correlation threshold.')
     parser.add_option('--input_dir', dest='indir', default='peaks', help='directory of peak_gene_nearby.R results.')
     parser.add_option('--output_dir', dest='outdir', default='peaks_filter', help='output directory.')
@@ -65,13 +66,18 @@ def main():
     cor_thres = options.thres
     input_dir = options.indir
     out_dir = options.outdir
+    dist_thres = options.dist_thres
     
 
     os.makedirs(out_dir, exist_ok=True)
     bed_file = '%s/peaks.bed'%input_dir    
     bed = pd.read_csv(bed_file, sep='\t', header=None)
-    peak_names = bed.iloc[:,3]    
+    peak_names = bed.iloc[:,3]
+
+    # read inputs
     ad = anndata.read_h5ad(ad_atac_file)
+    ad_rna = anndata.read_h5ad(ad_rna_file)
+    cells_ovlp = ad.obs_names.intersection(ad_rna.obs_names)
 
     ########################
     # compute denoised acc #
@@ -92,29 +98,30 @@ def main():
     model.load_weights(trained_model)
     accessibility = pred_on_fasta('%s/peaks.fasta'%input_dir, model, scale_method='sigmoid')
     accessibility = pd.DataFrame(accessibility, index=peak_names, columns=ad.obs_names).transpose()
-    accessibility.to_csv('%s/denoised_acc.csv'%input_dir)
+    accessibility = accessibility.loc[cells_ovlp,:]
+    accessibility.to_csv('%s/denoised_atac.csv'%input_dir)
     
     #################
     # peak gene cor #
     #################    
-    ad_rna = anndata.read_h5ad(ad_rna_file)
     genes = pd.read_csv('%s/genes_nearby.csv'%input_dir, index_col=0)
     dist_m = pd.read_csv('%s/peaks_gene_dist.csv'%input_dir, index_col=0)
     genes.index = genes['symbol']
     genes = genes.loc[genes.index.isin(ad_rna.var_names), :]
-    log2rp10k = pd.DataFrame(np.log2(np.array(ad_rna[:,genes.index].layers['denoised'])/100+1), 
+    log2rpm = pd.DataFrame(np.log2(np.array(ad_rna[:,genes.index].layers['denoised']+1)), 
                              columns=genes.index, index=ad_rna.obs_names)
-    log2rp10k = log2rp10k.loc[accessibility.index,:] # align RNA/ATAC cells
+    log2rpm = log2rpm.loc[cells_ovlp,:] # align RNA/ATAC cells
+    log2rpm.to_csv('%s/denoised_rna.csv'%input_dir)
 
     # compute peak gene cor cor matrix
     m = pd.DataFrame(np.nan, 
-                     columns=log2rp10k.columns, 
+                     columns=log2rpm.columns, 
                      index=accessibility.columns)
     for i in accessibility.columns:
-        for j in log2rp10k.columns:
+        for j in log2rpm.columns:
             a = accessibility[i]
-            b = log2rp10k[j]
-            choose = (a>0.1) & (b>0.1)
+            b = log2rpm[j]
+            choose = (a>0.1) & (b>1)
             if (sum(choose)>100):
                 m.loc[i, j] = pearsonr(a[choose], b[choose])[0]  
     m.index = accessibility.columns.str.cat(dist_m[gene_name].astype(str), sep=':')
@@ -130,17 +137,19 @@ def main():
     ################
     # filter peaks #
     ################
-    a = (m.idxmax(axis=1)==gene_name)
-    b = (m[gene_name]>cor_thres)
-    select = (a&b).values
+    #a = (m.idxmax(axis=1)==gene_name) # peak best correlation with target gene
+    b = (m[gene_name]>cor_thres) # peak-gene correlation > cor_thres
+    c = (dist_m[gene_name].abs()<dist_thres).values # promoter peaks
+    select = (b|c).values
 
     bed.loc[select,:].to_csv('%s/peaks.bed'%out_dir, index=False, header=False, sep='\t')
     bed['dist2tss'] = dist_m[gene_name].values
+    bed['cor'] = m[gene_name].values
     bed.loc[select,:].to_csv('%s/peaks_annot.csv'%out_dir)
 
     toplot = m.loc[select,:].transpose()
     f = sns.clustermap(toplot, col_cluster=False, row_cluster=False,
-                       figsize=(toplot.shape[1]/4+1, max(4, toplot.shape[0]/4+1)), 
+                       figsize=(max(4, toplot.shape[1]/4+1), max(4, toplot.shape[0]/4+1)), 
                        cmap='coolwarm', vmax=0.8, vmin=-0.8, dendrogram_ratio=0.1)
     f.ax_heatmap.set_yticklabels(f.ax_heatmap.get_yticklabels(), rotation=0) # don't rotate y-label
     f.savefig('%s/peak_gene_cor.png'%out_dir)

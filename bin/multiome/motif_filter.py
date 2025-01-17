@@ -20,6 +20,7 @@ def main():
     parser.add_option('--ad_atac', dest='ad_atac', help='ATAC anndata.')
     parser.add_option('--motif2tf', dest='motif2tf', help='meme motif to tf mapping file.')
     parser.add_option('--gene', dest='gene', help='gene name.')
+    parser.add_option('--groupby', dest='groupby', help='column in ad.obs to group cells. usually cell type or cluster.')
     parser.add_option('--ism_tfrna_thres',  dest='ism_tfrna_thres', type="float", default=0.2, help='ism-tfrna-cor threshold.')
     parser.add_option('--ism_targetrna_thres',  dest='ism_targetrna_thres', type="float", default=0.2, help='ism-targetrna-cor threshold.')
     parser.add_option('--input_dir', dest='indir', default='out', help='directory of scbasset_peak_ism.py results.')
@@ -36,6 +37,7 @@ def main():
     ad_rna_file = options.ad_rna
     ad_atac_file = options.ad_atac
     motif2tf_file = options.motif2tf
+    groupby = options.groupby
     gene_name = options.gene
     ism_tfrna_thres = options.ism_tfrna_thres
     ism_targetrna_thres = options.ism_targetrna_thres
@@ -57,8 +59,8 @@ def main():
     # save group-by-hits matrix #
     #############################
     a = pd.DataFrame(ism_m).transpose()
-    a['group'] = ad.obs['group'].values
-    a = a.groupby('group').mean().transpose()
+    a[groupby] = ad.obs[groupby].values
+    a = a.groupby(groupby).mean().transpose()
     a.index = hits.index
     a.to_csv('%s/motif_by_group_ism.csv'%input_dir)
 
@@ -69,6 +71,9 @@ def main():
     # ism-target_mrna correlation
     ad_rna.X = np.log2(ad_rna.layers['denoised']/100+1)
     acc = pd.read_csv('%s/desnoised_acc.csv'%input_dir, index_col=0)
+    ism_df = pd.DataFrame(ism_m, columns=ad.obs_names)
+    cells_ovlp = ad_rna.obs_names.intersection(acc.index)
+    
     hits['ism_tfmrna_cor'] = np.nan
     hits['ism_targetmrna_cor'] = np.nan
 
@@ -77,13 +82,13 @@ def main():
         tf = hits.loc[hit_id, 'tf']
         peak_id = hits.loc[hit_id, 'sequence_name']
         if tf in ad_rna.var_names:
-            a = np.array(ad_rna[:,tf].X).flatten()
-            b = ism_m[i,:]
-            select = (acc[peak_id]>0.1) & (a>0.1)
+            a = np.array(ad_rna[cells_ovlp, tf].X).flatten()
+            b = ism_df.iloc[i,:].loc[cells_ovlp]
+            select = (acc.loc[cells_ovlp, peak_id]>0.1) & (a>0.1)
             if sum(select)>=10: hits.loc[hit_id, 'ism_tfmrna_cor'] = pearsonr(a[select], b[select])[0]
-        a = np.array(ad_rna[:,gene_name].X).flatten()
-        b = ism_m[i,:]
-        select = (acc[peak_id]>0.1) & (a>0.1)
+        a = np.array(ad_rna[cells_ovlp, gene_name].X).flatten()
+        b = ism_df.iloc[i,:].loc[cells_ovlp]
+        select = (acc.loc[cells_ovlp, peak_id]>0.1) & (a>0.1)
         hits.loc[hit_id, 'ism_targetmrna_cor'] = pearsonr(a[select], b[select])[0]
 
     cols = ['motif_id', 'tf', 'sequence_name', 'start', 'stop', 'strand', 'p-value', 'matched_sequence', 'dot', 
