@@ -8,11 +8,12 @@ gene_name <- as.character(args[1])
 atlas <- as.character(args[2])
 
 # additional params
-peak_search_window <- 400000 # peaks within +/- 200kb of TSS
-gene_search_window <- 800000  # genes within +/- 400kb of TSS
+gtf_file <- ifelse(length(args) >= 3, args[3], "/home/yuanh/programs/genomes/mm10/mm10.refGene.gtf")
+peak_search_window <- ifelse(length(args) >= 4, as.numeric(args[4]), 400000) # peaks within +/- 200kb of TSS
+gene_search_window <- ifelse(length(args) >= 5, as.numeric(args[5]), 800000)  # genes within +/- 400kb of TSS
 
 out_dir <- "peaks"
-gtf <- import("/home/yuanh/programs/genomes/mm10/mm10.refGene.gtf", format="gtf")
+gtf <- import(gtf_file, format="gtf")
 bed <- import.bed(atlas)
 
 print(sprintf('find peaks within 200kb from TSS of %s', gene_name))

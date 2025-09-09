@@ -130,12 +130,12 @@ def main():
         axs[j+1].set_xlim(0, end-start-1)
         
         f.tight_layout()
-        f.savefig('%s/%s_%s_%d.png'%(outdir, peak_id, tf, pwm_start))
+        f.savefig('%s/%s_%d_%s.png'%(outdir, peak_id, pwm_start, tf))
         
         if strand=='+':
-            cmd = 'cp %s/%s.png %s/%s_%s_%d_motif.png' %(logo_path, motif_id, outdir, peak_id, tf, pwm_start)
+            cmd = 'cp %s/%s.png %s/%s_%d_%s_motif.png' %(logo_path, motif_id, outdir, peak_id, pwm_start, tf)
         else:
-            cmd = 'cp %s/%s_rc.png %s/%s_%s_%d_motif.png' %(logo_path, motif_id, outdir, peak_id, tf, pwm_start)
+            cmd = 'cp %s/%s_rc.png %s/%s_%d_%s_motif.png' %(logo_path, motif_id, outdir, peak_id, pwm_start, tf)
         subprocess.call(cmd, shell=True)
 
 if __name__ == '__main__':

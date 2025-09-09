@@ -5,6 +5,7 @@ import os
 import glob
 import sys
 import subprocess
+import tensorflow as tf
 
 import numpy as np
 import scanpy as sc
@@ -14,6 +15,8 @@ from scipy.stats import pearsonr
 import seaborn as sns
 from optparse import OptionParser
 from scbasset.utils import *
+
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 '''
 scbasset_peak_gene_cor.py
@@ -42,7 +45,7 @@ and outputs:
 def main():
     usage = 'usage: %prog [options] <anndata file> <trained model>'
     parser = OptionParser(usage)
-    parser.add_option('--ad_rna', dest='ad_rna', help='RNA anndata.')
+    parser.add_option('--ad_rna', dest='ad_rna', help='RNA anndata. requires normalized counts stored in ad_rna.layers[denoised]')
     parser.add_option('--ad_atac', dest='ad_atac', help='ATAC anndata.')
     parser.add_option('--model', dest='model', help='trained scBasset model h5.')
     parser.add_option('--fasta', dest='fasta', help='fasta file.')
